@@ -121,3 +121,16 @@ function verifyWin(playerList) {
         }
     }
 }
+
+document.getElementById('retry-button').addEventListener("click", tryAgain);
+
+function tryAgain() {
+    console.log('try clicked');
+    for (cell of cells) {
+        cell.textContent = '';
+    }
+    playerX = [];
+    player0 = [];
+    turn = 'X';
+    localStorage.setItem('turn', turn);
+}
