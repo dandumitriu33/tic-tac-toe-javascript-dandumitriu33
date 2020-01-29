@@ -34,8 +34,9 @@ function markBox(event) {
 }
 
 function buildLines() {
-    let gameBoard = document.getElementById('game-board');
+    let gameBoard = document.querySelector('#game-board');
     let n = gameBoard.dataset.winSize;
+    console.log(n);
     // on x axis, 0 to n
     let lineString = [];
     let allLines = [];
@@ -82,11 +83,12 @@ function buildLines() {
     for (let startPosition = 0; startPosition < n; startPosition++) {
         i = startPosition;
         j = n-1;
-        for (let vertical = 0; vertical < n; vertical++) {
+        for (let vertical = n-1; vertical >= 0; vertical--) {
+            j = vertical;
             if (i<n && j>=0) {
                 lineString.push(i.toString() + j.toString());
                 i += 1;
-                j -= 1;
+                // j -= 1;
             }
         }
         if (lineString.length == n) {
