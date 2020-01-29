@@ -37,22 +37,22 @@ function buildLines() {
     let gameBoard = document.getElementById('game-board');
     let n = gameBoard.dataset.winSize;
     // on x axis, 0 to n
-    let lineString = '';
+    let lineString = [];
     let allLines = [];
     for (let i = 0; i < n; i++) {
         for (let j = 0; j < n; j++) {
-            lineString += i.toString() + j.toString()
+            lineString.push(i.toString() + j.toString());
         }
         allLines.push(lineString);
-        lineString = '';
+        lineString = [];
     }
     // on y axis, 0 to n
     for (let i = 0; i < n; i++) {
         for (let j = 0; j < n; j++) {
-            lineString += j.toString() + i.toString()
+            lineString.push(j.toString() + i.toString());
         }
         allLines.push(lineString);
-        lineString = '';
+        lineString = [];
     }
     // diagonal SE
     let i = 0;
@@ -63,14 +63,14 @@ function buildLines() {
         i = startPosition;
         for (let vertical = 0; vertical < n; vertical++) {
             if (i<n && j<n) {
-                lineString += i.toString() + j.toString();
+                lineString.push(i.toString() + j.toString());
                 i += 1;
                 j += 1;
             }
         }
-        if (lineString !== '') {
+        if (lineString.length == n) {
             allLines.push(lineString);
-            lineString = '';
+            lineString = [];
             }
     }
     // diagonal NE
@@ -78,22 +78,22 @@ function buildLines() {
     j = 0;
     vertical = 0;
     startPosition = 0;
-    lineString = '';
+    lineString = [];
     for (let startPosition = 0; startPosition < n; startPosition++) {
         i = startPosition;
         j = n-1;
         for (let vertical = 0; vertical < n; vertical++) {
             if (i<n && j>=0) {
-                lineString += i.toString() + j.toString();
+                lineString.push(i.toString() + j.toString());
                 i += 1;
                 j -= 1;
             }
         }
-        if (lineString.length === n*2) {
+        if (lineString.length == n) {
             allLines.push(lineString);
-            lineString = '';
+            lineString = [];
             } else {
-            lineString = '';
+            lineString = [];
         }
     }
     console.log(allLines);
@@ -110,7 +110,7 @@ function verifyWin(playerList) {
         for (winningLine of winningLines) {
             possible = [];
             for (box of playerList) {
-                if (winningLine.includes(box)) {
+                if (winningLine.indexOf(box) >= 0) {
                     possible.push(box);
                     if (possible.length >= train) {
                         console.log('winwinwin');
