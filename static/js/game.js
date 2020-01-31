@@ -1,138 +1,323 @@
-let cells = document.querySelectorAll('.game-cell');
-// console.log(cells);
+function main() {
+    localStorage.setItem('turn', 'X');
 
-let turn = 'X';
-localStorage.setItem('turn', turn);
-
-for (cell of cells) {
-    cell.addEventListener('click', markBox);
-}
-
-let playerX = [];
-let player0 = [];
-
-function markBox(event) {
-    console.log('box marked');
-    if (localStorage.getItem('turn') === 'X' ) {
-        event.target.textContent = 'X';
-        turn = '0';
-        localStorage.setItem('turn', turn);
-        playerX.push(event.target.dataset.coordinateX + event.target.dataset.coordinateY);
-        if (verifyWin(playerX)) {
-            alert('Player X won!')
-        };
-    } else if (localStorage.getItem('turn') === '0' ) {
-        event.target.textContent = '0';
-        turn = 'X';
-        localStorage.setItem('turn', turn);
-        player0.push(event.target.dataset.coordinateX + event.target.dataset.coordinateY);
-        if (verifyWin(player0)) {
-            alert('Player 0 won!')
-        };
-    }
-    console.log('px: ', playerX, 'p0: ', player0);
-}
-
-function buildLines() {
-    let gameBoard = document.querySelector('#game-board');
-    let n = gameBoard.dataset.winSize;
-    console.log(n);
-    // on x axis, 0 to n
-    let lineString = [];
-    let allLines = [];
-    for (let i = 0; i < n; i++) {
-        for (let j = 0; j < n; j++) {
-            lineString.push(i.toString() + j.toString());
+    function setClickListener() {
+        let cells = document.querySelectorAll('.game-cell');
+        for (cell of cells) {
+            cell.addEventListener('click', markBox);
         }
-        allLines.push(lineString);
-        lineString = [];
     }
-    // on y axis, 0 to n
-    for (let i = 0; i < n; i++) {
-        for (let j = 0; j < n; j++) {
-            lineString.push(j.toString() + i.toString());
-        }
-        allLines.push(lineString);
-        lineString = [];
-    }
-    // diagonal SE
-    let i = 0;
-    let j = 0;
-    let vertical = 0;
-    let startPosition = 0;
-    for (let startPosition = 0; startPosition < n; startPosition++) {
-        i = startPosition;
-        for (let vertical = 0; vertical < n; vertical++) {
-            if (i<n && j<n) {
-                lineString.push(i.toString() + j.toString());
-                i += 1;
-                j += 1;
+
+    setClickListener();
+    let playerXPlacements = [];
+    let player0Placements = [];
+    let playerXLines = [];
+    let player0Lines = [];
+
+
+    function markBox(event) {
+        if (event.target.textContent === 'X' || event.target.textContent === '0') {
+            alert('Box already checked. Please try again');
+        } else {
+            console.log('box marked');
+            let coordX = event.target.dataset.coordinateX;
+            let coordY = event.target.dataset.coordinateY;
+            if (localStorage.getItem('turn') === 'X') {
+                event.target.textContent = 'X';
+                playerXPlacements.push(coordX + coordY);
+                createPlayerXLines(coordX, coordY);
+                checkPlayerXWin();
+                localStorage.setItem('turn', '0');
+            } else if (localStorage.getItem('turn') === '0') {
+                event.target.textContent = '0';
+                player0Placements.push(coordX + coordY);
+                createPlayer0Lines(coordX, coordY);
+                checkPlayer0Win();
+                localStorage.setItem('turn', 'X');
             }
         }
-        if (lineString.length == n) {
-            allLines.push(lineString);
-            lineString = [];
-            }
     }
-    // diagonal NE
-    i = 0;
-    j = 0;
-    vertical = 0;
-    startPosition = 0;
-    lineString = [];
-    for (let startPosition = 0; startPosition < n; startPosition++) {
-        i = startPosition;
-        j = n-1;
-        for (let vertical = n-1; vertical >= 0; vertical--) {
-            j = vertical;
-            if (i<n && j>=0) {
-                lineString.push(i.toString() + j.toString());
-                i += 1;
-                // j -= 1;
-            }
+
+
+    document.getElementById('retry-button').addEventListener("click", tryAgain);
+
+    function tryAgain() {
+        let cells = document.querySelectorAll('.game-cell');
+        console.log('try clicked');
+        for (cell of cells) {
+            cell.textContent = '';
         }
-        if (lineString.length == n) {
-            allLines.push(lineString);
-            lineString = [];
+        playerXPlacements = [];
+        player0Placements = [];
+        localStorage.setItem('turn', 'X');
+    }
+
+
+    function createPlayerXLines(coordX, coordY) {
+        let gameBoard = document.getElementById('game-board');
+        let maxWidth = parseInt(gameBoard.dataset.colNum) - 1;
+        let maxHeight = parseInt(gameBoard.dataset.rowNum) - 1;
+        let winLineLength = parseInt(gameBoard.dataset.winSize);
+        coordX = parseInt(coordX);
+        coordY = parseInt(coordY);
+        // create N
+        let lineNorth = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordY - i).toString() < 0) {
+                break;
             } else {
-            lineString = [];
+                lineNorth.push(coordX.toString() + (coordY - i).toString());
+            }
+            if (lineNorth.length === winLineLength) {
+                playerXLines.push(lineNorth);
+                console.log('n: ', lineNorth);
+            }
         }
+        // create NE
+        let lineNorthEast = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordX + i).toString() > maxWidth || (coordY - i).toString() < 0) {
+                break;
+            } else {
+                lineNorthEast.push((coordX + i).toString() + (coordY - i).toString());
+            }
+            if (lineNorthEast.length === winLineLength) {
+                playerXLines.push(lineNorthEast);
+                console.log('ne: ', lineNorthEast);
+            }
+        }
+        // create E
+        let lineEast = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordX + i).toString() > maxWidth) {
+                break;
+            } else {
+                lineEast.push((coordX + i).toString() + coordY.toString());
+            }
+            if (lineEast.length === winLineLength) {
+                playerXLines.push(lineEast);
+                console.log('e: ', lineEast);
+            }
+        }
+        // create SE
+        let lineSouthEast = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordX + i).toString() > maxWidth || (coordY + i).toString() > maxHeight) {
+                break;
+            } else {
+                lineSouthEast.push((coordX + i).toString() + (coordY + i).toString());
+            }
+            if (lineSouthEast.length === winLineLength) {
+                playerXLines.push(lineSouthEast);
+                console.log('se: ', lineSouthEast)
+            }
+        }
+        // create S
+        let lineSouth = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if (coordY + i > maxHeight) {
+                break;
+            } else {
+                lineSouth.push(coordX.toString() + (coordY + i).toString());
+            }
+            if (lineSouth.length === winLineLength) {
+                playerXLines.push(lineSouth);
+                console.log('s: ', lineSouth)
+            }
+        }
+        // create SW
+        let lineSouthWest = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordX - i) < 0 || (coordY + i) > maxHeight) {
+                break;
+            } else {
+                lineSouthWest.push((coordX - i).toString() + (coordY + i).toString());
+            }
+            if (lineSouthWest.length === winLineLength) {
+                playerXLines.push(lineSouthWest);
+                console.log('sw: ', lineSouthWest)
+            }
+        }
+        // create W
+        let lineWest = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordX - i) < 0) {
+                break;
+            } else {
+                lineWest.push((coordX - i).toString() + coordY.toString());
+            }
+            if (lineWest.length === winLineLength) {
+                playerXLines.push(lineWest);
+                console.log('w: ', lineWest);
+            }
+        }
+        // create NW
+        let lineNorthWest = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordX - i) < 0 || (coordY - i) < 0) {
+                break;
+            } else {
+                lineNorthWest.push((coordX - i).toString() + (coordY - i).toString());
+            }
+            if (lineNorthWest.length === winLineLength) {
+                playerXLines.push(lineNorthWest);
+                console.log('nw: ', lineNorthWest)
+            }
+        }
+        console.log(playerXLines);
     }
-    console.log(allLines);
-    return allLines;
-}
 
-function verifyWin(playerList) {
-    console.log(playerList);
-    let gameBoard = document.getElementById('game-board');
-    let train = gameBoard.dataset.winSize;
-    let winningLines = buildLines();
-    let possible = [];
-    if (playerList.length >= train) {
-        for (winningLine of winningLines) {
-            possible = [];
-            for (box of playerList) {
+
+    function createPlayer0Lines(coordX, coordY) {
+        let gameBoard = document.getElementById('game-board');
+        let maxWidth = parseInt(gameBoard.dataset.colNum) - 1;
+        let maxHeight = parseInt(gameBoard.dataset.rowNum) - 1;
+        let winLineLength = parseInt(gameBoard.dataset.winSize);
+        coordX = parseInt(coordX);
+        coordY = parseInt(coordY);
+        // create N
+        let lineNorth = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordY - i).toString() < 0) {
+                break;
+            } else {
+                lineNorth.push(coordX.toString() + (coordY - i).toString());
+            }
+            if (lineNorth.length === winLineLength) {
+                player0Lines.push(lineNorth);
+                console.log('n: ', lineNorth);
+            }
+        }
+        // create NE
+        let lineNorthEast = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordX + i).toString() > maxWidth || (coordY - i).toString() < 0) {
+                break;
+            } else {
+                lineNorthEast.push((coordX + i).toString() + (coordY - i).toString());
+            }
+            if (lineNorthEast.length === winLineLength) {
+                player0Lines.push(lineNorthEast);
+                console.log('ne: ', lineNorthEast);
+            }
+        }
+        // create E
+        let lineEast = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordX + i).toString() > maxWidth) {
+                break;
+            } else {
+                lineEast.push((coordX + i).toString() + coordY.toString());
+            }
+            if (lineEast.length === winLineLength) {
+                player0Lines.push(lineEast);
+                console.log('e: ', lineEast);
+            }
+        }
+        // create SE
+        let lineSouthEast = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordX + i).toString() > maxWidth || (coordY + i).toString() > maxHeight) {
+                break;
+            } else {
+                lineSouthEast.push((coordX + i).toString() + (coordY + i).toString());
+            }
+            if (lineSouthEast.length === winLineLength) {
+                player0Lines.push(lineSouthEast);
+                console.log('se: ', lineSouthEast)
+            }
+        }
+        // create S
+        let lineSouth = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if (coordY + i > maxHeight) {
+                break;
+            } else {
+                lineSouth.push(coordX.toString() + (coordY + i).toString());
+            }
+            if (lineSouth.length === winLineLength) {
+                player0Lines.push(lineSouth);
+                console.log('s: ', lineSouth)
+            }
+        }
+        // create SW
+        let lineSouthWest = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordX - i) < 0 || (coordY + i) > maxHeight) {
+                break;
+            } else {
+                lineSouthWest.push((coordX - i).toString() + (coordY + i).toString());
+            }
+            if (lineSouthWest.length === winLineLength) {
+                player0Lines.push(lineSouthWest);
+                console.log('sw: ', lineSouthWest)
+            }
+        }
+        // create W
+        let lineWest = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordX - i) < 0) {
+                break;
+            } else {
+                lineWest.push((coordX - i).toString() + coordY.toString());
+            }
+            if (lineWest.length === winLineLength) {
+                player0Lines.push(lineWest);
+                console.log('w: ', lineWest);
+            }
+        }
+        // create NW
+        let lineNorthWest = [];
+        for (let i = 0; i < winLineLength; i++) {
+            if ((coordX - i) < 0 || (coordY - i) < 0) {
+                break;
+            } else {
+                lineNorthWest.push((coordX - i).toString() + (coordY - i).toString());
+            }
+            if (lineNorthWest.length === winLineLength) {
+                player0Lines.push(lineNorthWest);
+                console.log('nw: ', lineNorthWest)
+            }
+        }
+        console.log(player0Lines);
+    }
+
+    function checkPlayerXWin() {
+        let gameBoard = document.getElementById('game-board');
+        let winLineLength = parseInt(gameBoard.dataset.winSize);
+        let possibleWin = [];
+        for (winningLine of playerXLines) {
+            possibleWin = [];
+            for (box of playerXPlacements) {
                 if (winningLine.indexOf(box) >= 0) {
-                    possible.push(box);
-                    if (possible.length >= train) {
-                        console.log('winwinwin');
-                        return true
+                    possibleWin.push(box);
+                    if (possibleWin.length === winLineLength) {
+                        alert('Player X wins.');
+                        return;
                     }
                 }
             }
         }
     }
-}
 
-document.getElementById('retry-button').addEventListener("click", tryAgain);
 
-function tryAgain() {
-    console.log('try clicked');
-    for (cell of cells) {
-        cell.textContent = '';
+    function checkPlayer0Win() {
+        let gameBoard = document.getElementById('game-board');
+        let winLineLength = parseInt(gameBoard.dataset.winSize);
+        let possibleWin = [];
+        for (winningLine of player0Lines) {
+            possibleWin = [];
+            for (box of player0Placements) {
+                if (winningLine.indexOf(box) >= 0) {
+                    possibleWin.push(box);
+                    if (possibleWin.length === winLineLength) {
+                        alert('Player 0 wins.');
+                        return;
+                    }
+                }
+            }
+        }
     }
-    playerX = [];
-    player0 = [];
-    turn = 'X';
-    localStorage.setItem('turn', turn);
-}
+
+} // ends main()
+main();
